@@ -2,8 +2,8 @@
 
 Offers a quick way of analyzing language YAML-files and to add missing translation keys from the CLI.
 
-[![Gem Version](https://img.shields.io/gem/v/chivy.svg)](https://rubygems.org/gems/woro)
-[![Gem Downloads](https://img.shields.io/gem/dt/chivy.svg)](https://rubygems.org/gems/woro)
+[![Gem Version](https://img.shields.io/gem/v/chivy.svg)](https://rubygems.org/gems/chivy)
+[![Gem Downloads](https://img.shields.io/gem/dt/chivy.svg)](https://rubygems.org/gems/chivy)
 [![Yard Docs](http://img.shields.io/badge/yard-docs-blue.svg)](http://rubydoc.info/github/dahie/chivy)
 
 
