@@ -1,0 +1,71 @@
+#!/usr/bin/env ruby
+# coding: utf-8
+
+require 'commander/import'
+require 'chivy'
+
+program :name, 'chivy'
+program :version, Chivy::VERSION
+program :description, 'List and fill missing translation keys in YAML-files.'
+
+default_command :check
+
+command :list do |c|
+  c.syntax      = 'chivy [list|ls|check] [options]'
+  c.description = 'List missing keys'
+  c.example 'List missing translation keys', 'chivy list'
+  c.example 'List missing translation keys of in directory config/locales/', 'chivy list config/locales'
+  #c.example 'List missing translation keys in directory config/locales/application*', 'chivy list config/locales/application*'
+  c.action do |args, options|
+
+    folder = args[1] || '.'
+
+    files = Dir.entries(folder)
+
+    # find base locales
+    base_locales = {}
+    base_names = {}
+    files.each do |filename|
+      if filename.match(/(\S*)\.(\S*)(.yml)/)
+
+
+        tree = Chivy::Tree.new filename
+        tree.load File.join(folder, filename)
+
+        if base_locales.include? tree.locale
+          base_locales[tree.locale] << tree.name
+        else
+          base_locales[tree.locale] = [tree.name]
+        end
+
+        if base_names.include? tree.name
+          base_names[tree.name] << tree
+        else
+          base_names[tree.name] = [tree]
+        end
+      else
+        # TODO error message
+
+      end
+    end
+
+    processed_files = []
+
+    base_names.each_key do |name|
+      reference_tree = base_names[name].first
+      base_names[name].each do |tree|
+        next if tree.file == reference_tree.file
+
+        puts "--- #{reference_tree.file} to #{tree.file}"
+
+        diffs = HashDiff.diff(reference_tree.tree, tree.tree)
+        diffs.each do |diff_set|
+          if diff_set[0] == '-' || diff_set[0] == '+' || diff_set[2] == nil || diff_set[3] == nil
+            puts "#{diff_set[0]} #{diff_set[1]}: #{diff_set[2]}"
+          end
+        end
+      end
+    end
+  end
+end
+alias_command :ls, :list, :check
