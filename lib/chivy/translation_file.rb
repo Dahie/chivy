@@ -1,7 +1,7 @@
 require 'yaml'
 
 module Chivy
-  class Tree
+  class TranslationFile
 
     # Forwarding methods to the @tree
     extend Forwardable
@@ -17,7 +17,7 @@ module Chivy
 
     def load(file)
       @file = file
-      @tree = ::YAML.load_file(file)[locale] if file
+      @tree = ::YAML.load_file(file) if file
       @tree
     end
 

@@ -3,6 +3,7 @@
 
 require 'commander/import'
 require 'chivy'
+require 'key_path'
 
 program :name, 'chivy'
 program :version, Chivy::VERSION
@@ -22,27 +23,53 @@ command :list do |c|
     files = Dir.entries(folder)
 
     tree_manager = Chivy::TreeManager.load(folder, files)
-    tree_manager.each_base_name do |reference_tree|
-      tree_manager.each_base_name do |tree|
-        next if tree.file == reference_tree.file
+    tree_manager.each_base_name_permutation do |reference_translation, translation|
+      next if translation.file == reference_translation.file
 
-        say "\n--- #{tree.file} to #{reference_tree.file}"
+      say "\n--- #{reference_translation.file} to #{translation.file}"
 
-        diffs = HashDiff.diff(reference_tree.tree, tree.tree)
-        diffs.each do |diff_set|
-          if relevant_change?(diff_set)
-            say(color("#{diff_set[0]} #{diff_set[1]}: #{diff_set[2]}", change_color(diff_set[0])))
+      puts reference_translation.inspect
+      puts translation.inspect
+
+      tree_diff = Chivy::TreeDiff.new(reference_translation.tree[reference_translation.locale],
+                                      translation.tree[translation.locale])
+      tree_diff.each do |diff_set|
+
+        say(color("#{change_verbose(diff_set[0])} #{diff_set[1]}: #{diff_set[2]}", change_color(diff_set[0])))
+
+        if diff_set[0] == '+'
+          # may adds missing key
+          if diff_set[2].is_a? Hash
+            diff_set[2].each do |key, value|
+              tree_path = "#{reference_translation.locale}.#{diff_set[1]}.#{key}"
+              new_value = prompt_fill_value tree_path
+
+              reference_translation.dig(tree_path)
+
+              #path = KeyPath::Path.new tree_path
+              #reference_translation.tree.set_keypath("#{reference_translation.locale}.#{diff_set[1]}.#{key}", new_value)
+            end
+          else
+            prompt_fill_value "#{reference_translation.locale}.#{diff_set[1]}"
           end
+        elsif diff_set[0] == '-'
+          # may remove existing key
+          agree("Remove key in #{translation.file}?")
         end
+
       end
     end
   end
 end
 alias_command :ls, :list, :check
 
-def relevant_change?(diff_set)
-  diff_set[0] == '-' || diff_set[0] == '+' || diff_set[2] == nil || diff_set[3] == nil
+
+def prompt_fill_value(tree_path)
+  new_value = ask("#{tree_path}: ")
+  puts new_value
+  new_value
 end
+
 
 def change_color(change_type)
   case change_type
@@ -51,6 +78,17 @@ def change_color(change_type)
   when '+'
     :green
   else
-    :orange
+    :yellow
+  end
+end
+
+def change_verbose(change_type)
+  case change_type
+  when '-'
+    'Delete'
+  when '+'
+    'Add'
+  else
+    'Modify'
   end
 end

@@ -30,15 +30,23 @@ module Chivy
       end
     end
 
+    def each_base_name_permutation &block
+      each_base_name do |reference_tree|
+        each_base_name do |tree|
+          block.call(reference_tree, tree)
+        end
+      end
+    end
+
 
     def fill
       files.each do |filename|
         if filename.match TRANSLATION_YML_REGEX
-          tree = Chivy::Tree.new filename
-          tree.load File.join(folder, filename)
+          translation = TranslationFile.new filename
+          translation.load File.join(folder, filename)
           loaded_files << filename
-          add_base_name(tree)
-          add_base_locale(tree)
+          add_base_name translation
+          add_base_locale translation
         end
       end
     end

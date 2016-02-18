@@ -1,4 +1,5 @@
+require 'buff/extensions/hash/dotted_path'
 require 'chivy/version'
-require 'chivy/tree'
+require 'chivy/translation_file'
 require 'chivy/tree_diff'
 require 'chivy/tree_manager'
